@@ -28,6 +28,7 @@ public:
     void drawText(const char* text, int x, int y, int textSize = 1);
     void drawLine(int x1, int y1, int x2, int y2);
     void finishUpdate();
+    int getTextWidth(const char* text, int textSize = 1);
     GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT>* getDisplay(); // Direct access for advanced drawing
 };
 

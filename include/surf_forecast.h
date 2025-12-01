@@ -6,6 +6,16 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "epaper_display.h"
+#include "sensor_interface.h"
+
+// Global refresh interval for both data fetch and display update (in milliseconds)
+const unsigned long REFRESH_INTERVAL_MS = 60000; // 1 minute
+
+struct SurfLocation {
+    float latitude;
+    float longitude;
+    String name;
+};
 
 struct SurfConditions {
     float currentWaveHeight;
@@ -18,17 +28,18 @@ struct SurfConditions {
     String location;
 };
 
-class SurfForecast {
+class SurfForecast : public SensorInterface {
 private:
     EPaperDisplay* display;
     SurfConditions conditions;
     String lastFetchTime; // Store the UK time when data was last fetched
     
-    // API settings - Cribbar, Newquay (famous big wave surf spot)
+    // API settings
     const String API_URL = "https://marine-api.open-meteo.com/v1/marine";
-    const float LATITUDE = 50.425998;
-    const float LONGITUDE = -5.103096;
-    const String LOCATION_NAME = "Cribbar, Newquay";
+    
+    static const SurfLocation* getSurfLocations();
+    static int getNumLocations();
+    int currentLocationIndex = 0;
     
     // Helper methods
     String getRatingFromHeight(float heightMeters);
@@ -39,11 +50,19 @@ private:
     
 public:
     SurfForecast(EPaperDisplay* displayPtr);
-    void begin(const char* ssid, const char* password);
+    virtual ~SurfForecast() {}
+
+    // Implement SensorInterface
+    void begin(const char* ssid, const char* password) override;
+    void update() override;
+    void displayCurrentData() override;
+    bool isDataReady() const override;
+
+    // SurfForecast-specific methods
     bool fetchForecastData();
-    void displayCurrentConditions();
-    void update();
+    void displayCurrentConditions(); // Legacy method for backward compatibility
     bool isWiFiConnected();
+    void nextLocation();
 };
 
 #endif

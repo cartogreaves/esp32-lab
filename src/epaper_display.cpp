@@ -106,16 +106,22 @@ void EPaperDisplay::sleep() {
     Serial.println("Display put to sleep");
 }
 
-// Advanced layout methods for surf forecast
+// Advanced layout methods for complex displays
+// NOTE: These helper methods are for simple single-page content only.
+// For complex multi-element layouts (like surf forecast), use getDisplay() 
+// and manage your own do...while(nextPage()) loop.
+
 void EPaperDisplay::startUpdate() {
     display->setRotation(1); // Landscape orientation
     display->setFullWindow();
     display->firstPage();
+    // Clear the screen at the start
+    display->fillScreen(GxEPD_WHITE);
+    display->setTextColor(GxEPD_BLACK);
+    display->setFont();
 }
 
 void EPaperDisplay::drawText(const char* text, int x, int y, int textSize) {
-    display->setTextColor(GxEPD_BLACK);
-    display->setFont(); // Use default font
     display->setTextSize(textSize);
     display->setCursor(x, y);
     display->print(text);
@@ -126,8 +132,23 @@ void EPaperDisplay::drawLine(int x1, int y1, int x2, int y2) {
 }
 
 void EPaperDisplay::finishUpdate() {
-    while (!display->nextPage()); // Complete the update
+    // For simple single-page updates, just complete the current page
+    // This assumes startUpdate() was called and content was drawn
+    // Note: For paged displays, the do...while loop should be managed by the caller
+    // if they need to redraw content on each page
+    display->nextPage(); // Complete the single page update
     display->hibernate(); // Put display in low power mode
+}
+
+int EPaperDisplay::getTextWidth(const char* text, int textSize) {
+    display->setFont(); // Use default font
+    display->setTextSize(textSize);
+    
+    int16_t x1, y1;
+    uint16_t w, h;
+    display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+    
+    return w;
 }
 
 GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT>* EPaperDisplay::getDisplay() {
