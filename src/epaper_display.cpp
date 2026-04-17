@@ -11,11 +11,20 @@ EPaperDisplay::~EPaperDisplay() {
 }
 
 void EPaperDisplay::begin() {
-    Serial.println("Initializing e-paper display with CORRECTED driver...");
-    
+    Serial.println("Initializing e-paper display (default SPI)...");
+
     display->init(115200); // Enable diagnostic output
     Serial.println("Display init completed");
-    
+
+    printPinAssignments();
+}
+
+void EPaperDisplay::begin(SPIClass& spi) {
+    Serial.println("Initializing e-paper display (custom SPI bus)...");
+
+    display->init(115200, true, 10, false, spi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+    Serial.println("Display init completed");
+
     printPinAssignments();
 }
 
@@ -27,7 +36,7 @@ void EPaperDisplay::printPinAssignments() {
     Serial.printf("  BUSY: GPIO %d\n", busyPin);
     Serial.printf("  MOSI: GPIO 23 (default SPI)\n");
     Serial.printf("  SCK: GPIO 18 (default SPI)\n");
-    Serial.println("*** AVOIDING GPIO16/17 - they are used for PSRAM! ***");
+    Serial.println("*** AVOIDING strapping pins (0,2,4,5,12,15) and PSRAM (16,17) ***");
 }
 
 void EPaperDisplay::clear() {

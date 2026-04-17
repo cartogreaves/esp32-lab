@@ -4,8 +4,8 @@
 #include "../include/temperature_and_humidity.h"
 #include "../include/time_utils.h"
 
-TemperatureHumiditySensor::TemperatureHumiditySensor(EPaperDisplay* displayPtr, int sensorPin, uint8_t sensorType)
-    : display(displayPtr), dhtPin(sensorPin), dhtType(sensorType), initialized(false) {
+TemperatureHumiditySensor::TemperatureHumiditySensor(EPaperDisplay* displayPtr, DataLogger* logger, int sensorPin, uint8_t sensorType)
+    : display(displayPtr), datalogger(logger), dhtPin(sensorPin), dhtType(sensorType), initialized(false) {
     dhtSensor = new DHT(sensorPin, sensorType);
     currentData = {0.0f, 0.0f, "", true};
 }
@@ -111,6 +111,19 @@ void TemperatureHumiditySensor::readSensor() {
     // Update timestamp
     currentData.lastUpdateTime = TimeUtils::getCurrentTimestamp();
 
+    // Log data to database if logger is available
+    if (datalogger) {
+        JsonDocument logData;
+        logData["temperature"] = temp;
+        logData["humidity"] = hum;
+
+        if (datalogger->logData(logData, "moist")) {
+            Serial.println("Temperature data logged to database");
+        } else {
+            Serial.println("Failed to log temperature data to database");
+        }
+    }
+
     Serial.printf("Valid sensor reading: %.1f°C, %.1f%% RH at %s\n",
                   temp, hum, currentData.lastUpdateTime.c_str());
 }
@@ -163,7 +176,7 @@ void TemperatureHumiditySensor::displayCurrentData() {
             gxDisplay->print("TEMPERATURE");
 
             // Temperature value
-            char tempStr[20];
+            char tempStr[20] = {0};
             sprintf(tempStr, "%.1f", currentData.temperature);
             int tempValueWidth = display->getTextWidth(tempStr, 3);
             gxDisplay->setTextSize(3);
@@ -181,7 +194,7 @@ void TemperatureHumiditySensor::displayCurrentData() {
             gxDisplay->print("HUMIDITY");
 
             // Humidity value
-            char humStr[20];
+            char humStr[20] = {0};
             sprintf(humStr, "%.1f", currentData.humidity);
             int humValueWidth = display->getTextWidth(humStr, 3);
             gxDisplay->setTextSize(3);

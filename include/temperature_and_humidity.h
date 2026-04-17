@@ -5,6 +5,7 @@
 #include <DHT.h>
 #include "epaper_display.h"
 #include "sensor_interface.h"
+#include "datalogger.h"
 
 struct TempHumidityData {
     float temperature;
@@ -17,6 +18,7 @@ class TemperatureHumiditySensor : public SensorInterface {
 private:
     EPaperDisplay* display;
     DHT* dhtSensor;
+    DataLogger* datalogger;
     TempHumidityData currentData;
 
     int dhtPin;
@@ -29,7 +31,9 @@ private:
     void updateDisplay();
 
 public:
-    TemperatureHumiditySensor(EPaperDisplay* displayPtr, int sensorPin = 26, uint8_t sensorType = DHT11);
+    TemperatureHumiditySensor(EPaperDisplay* displayPtr, DataLogger* logger = nullptr, int sensorPin = 26, uint8_t sensorType = DHT11);
+    // displayPtr: E-paper display instance
+    // logger: DataLogger instance for logging data (optional)
     // sensorPin: GPIO pin connected to DHT sensor data pin (default: 26)
     // sensorType: DHT sensor type - DHT11, DHT21, DHT22, etc. (default: DHT11)
     virtual ~TemperatureHumiditySensor();

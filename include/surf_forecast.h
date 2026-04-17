@@ -7,6 +7,7 @@
 #include <ArduinoJson.h>
 #include "epaper_display.h"
 #include "sensor_interface.h"
+#include "datalogger.h"
 
 // Global refresh interval for both data fetch and display update (in milliseconds)
 const unsigned long REFRESH_INTERVAL_MS = 60000; // 1 minute
@@ -31,6 +32,7 @@ struct SurfConditions {
 class SurfForecast : public SensorInterface {
 private:
     EPaperDisplay* display;
+    DataLogger* datalogger;
     SurfConditions conditions;
     String lastFetchTime; // Store the UK time when data was last fetched
     
@@ -49,7 +51,7 @@ private:
     // Removed unused helper methods
     
 public:
-    SurfForecast(EPaperDisplay* displayPtr);
+    SurfForecast(EPaperDisplay* displayPtr, DataLogger* logger = nullptr);
     virtual ~SurfForecast() {}
 
     // Implement SensorInterface

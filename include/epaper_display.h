@@ -2,6 +2,7 @@
 #define EPAPER_DISPLAY_H
 
 #include <Arduino.h>
+#include <SPI.h>
 #include <GxEPD2_BW.h>
 #include <Adafruit_GFX.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -10,11 +11,12 @@ class EPaperDisplay {
 private:
     GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT>* display;
     int csPin, dcPin, rstPin, busyPin;
-    
+
 public:
     EPaperDisplay(int cs, int dc, int rst, int busy);
     ~EPaperDisplay(); // Destructor to clean up memory
     void begin();
+    void begin(SPIClass& spi);  // Custom SPI bus (e.g. HSPI for camera mode)
     void clear();
     void fillScreen(uint16_t color);
     void showText(const char* text, int x = 10, int y = 30, int textSize = 3);

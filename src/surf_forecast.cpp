@@ -21,7 +21,7 @@ int SurfForecast::getNumLocations() {
     return sizeof(surfLocations) / sizeof(surfLocations[0]);
 }
 
-SurfForecast::SurfForecast(EPaperDisplay* displayPtr) : display(displayPtr) {
+SurfForecast::SurfForecast(EPaperDisplay* displayPtr, DataLogger* logger) : display(displayPtr), datalogger(logger) {
 }
 
 void SurfForecast::begin(const char* ssid, const char* password) {
@@ -143,7 +143,26 @@ bool SurfForecast::fetchForecastData() {
                      conditions.currentWaveHeight, conditions.currentRating.c_str(),
                      conditions.todayAverage, conditions.todayRating.c_str(),
                      conditions.tomorrowAverage, conditions.tomorrowRating.c_str());
-        
+
+        // Log data to database if logger is available
+        if (datalogger) {
+            JsonDocument logData;
+            logData["current_wave_height"] = conditions.currentWaveHeight;
+            logData["current_rating"] = conditions.currentRating;
+            logData["today_average"] = conditions.todayAverage;
+            logData["today_rating"] = conditions.todayRating;
+            logData["tomorrow_average"] = conditions.tomorrowAverage;
+            logData["tomorrow_rating"] = conditions.tomorrowRating;
+            logData["location"] = conditions.location;
+            logData["sensor_type"] = "surf_forecast";
+
+            if (datalogger->logData(logData, "surf_forecast")) {
+                Serial.println("Surf forecast data logged to database");
+            } else {
+                Serial.println("Failed to log surf forecast data to database");
+            }
+        }
+
         http.end();
         return true;
     } else {

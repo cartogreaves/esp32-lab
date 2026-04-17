@@ -52,6 +52,7 @@ The project uses a clean, modular design supporting multiple sensor deployments:
 - **`SensorInterface`**: Common interface for all sensor types
 - **`TemperatureHumiditySensor`**: DHT11 temperature and humidity monitoring
 - **`SurfForecast`**: WiFi-based surf condition monitoring
+- **`DataLogger`**: Flexible Supabase database logging with batching
 - **`TimeUtils`**: NTP time synchronization and timestamp formatting
 - **`EPaperDisplay`**: Unified e-paper display management
 - **`LEDController`**: Simple LED control (on/off/toggle/flash)
@@ -83,6 +84,15 @@ GREAT: 4.0 - 6.0 ft
 EPIC:  6.0 - 8.0 ft
 HUGE:  > 8.0 ft
 ```
+
+### 📊 Data Logging to Supabase
+The project includes a flexible datalogger module that can save sensor data to a Supabase PostgreSQL database:
+
+- **Batch Processing**: Configurable batch sizes for efficient data transmission
+- **Flexible Configuration**: Different settings per sensor type
+- **Automatic Retry**: Built-in error handling and retry logic
+- **Time-based Upload**: Send data at regular intervals or when batch is full
+- **Environment Variables**: Sensitive configuration stored securely in `.env` file
 
 ### Display Features
 - **Refresh Rate**: 30-second intervals for both deployment types
@@ -149,15 +159,64 @@ lib_deps =
    ; build_flags = -DDEPLOYMENT_SURF_FORECAST
    ```
 
-3. **Configure WiFi** (surf forecast mode only) in `src/main.cpp`:
-   ```cpp
-   const char* WIFI_SSID = "your-wifi-name";
-   const char* WIFI_PASSWORD = "your-wifi-password";
+3. **Configure WiFi and Supabase** using the `.env` file:
+   ```bash
+   # Copy the template
+   cp data/.env.example data/.env
+
+   # Edit with your configuration (this file is gitignored)
+   nano data/.env
    ```
 
-4. **Build and upload**:
+   **Required Configuration:**
+   ```env
+   # WiFi Configuration
+   WIFI_SSID=your-wifi-name
+   WIFI_PASSWORD=your-wifi-password
+
+   # Supabase Configuration (for data logging)
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_API_KEY=your-anon-key
+
+   # DataLogger Configuration
+   DATALOGGER_BATCH_SIZE=5
+   DATALOGGER_LOG_INTERVAL=300000
+   ```
+
+   **Supabase Setup:**
+   1. Create a [Supabase](https://supabase.com) project
+   2. Go to Settings > API to get your Project URL and anon/public key
+   3. Create tables for each sensor type you'll use:
+
+      **Temperature & Humidity Table:**
+      ```sql
+      CREATE TABLE temperature_humidity (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMPTZ DEFAULT NOW(),
+        sensor_type TEXT,
+        temperature FLOAT,
+        humidity FLOAT,
+        sensor_error BOOLEAN
+      );
+      ```
+
+      **Surf Forecast Table:**
+      ```sql
+      CREATE TABLE surf_forecast (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMPTZ DEFAULT NOW(),
+        sensor_type TEXT,
+        forecast_data JSONB
+      );
+      ```
+
+4. **Build, upload firmware and filesystem**:
    ```bash
+   # Upload firmware
    pio run --target upload
+
+   # Upload filesystem (contains .env file)
+   pio run --target uploadfs
    ```
 
 5. **Monitor serial output**:

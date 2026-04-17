@@ -16,8 +16,8 @@ String TimeUtils::getCurrentTimestamp() {
 
     if (getLocalTime(&timeinfo)) {
         // Format: HH:MM:SS Day DDth Month YYYY with ordinal suffix
-        char timeStr[60];
-        char dayStr[10];
+        char timeStr[60] = {0};
+        char dayStr[10] = {0};
 
         // Create day string with ordinal suffix
         sprintf(dayStr, "%d%s", timeinfo.tm_mday, getOrdinalSuffix(timeinfo.tm_mday).c_str());
@@ -50,7 +50,7 @@ bool TimeUtils::isTimeSynced() {
 }
 
 String TimeUtils::getFallbackTimestamp() {
-    char fallback[30];
+    char fallback[30] = {0};
     sprintf(fallback, "%lus ago", millis() / 1000);
     return String(fallback);
 }
